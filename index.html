@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEDLOG MECHANICAL WORKSHOP STORE</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#687386;--line:#e5e9f0;--primary:#173f67;--accent:#f59e0b;--danger:#dc3545;--success:#198754;--sidebar:#102b46}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:245px;background:var(--sidebar);color:#fff;padding:20px 14px;overflow:auto;z-index:20}
+.brand{font-weight:800;font-size:17px;padding:8px 10px 22px;line-height:1.35}.brand small{display:block;color:#9fb2c7;font-weight:500;margin-top:5px}
+.nav button{width:100%;border:0;background:transparent;color:#dce7f2;text-align:left;padding:11px 12px;border-radius:9px;margin:2px 0;cursor:pointer;font-size:14px}
+.nav button:hover,.nav button.active{background:#1b527f;color:#fff}.nav .section{font-size:10px;color:#7f9ab3;margin:18px 10px 5px;text-transform:uppercase;letter-spacing:1px}
+.main{margin-left:245px;min-height:100vh}.top{height:66px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:10}
+.search{width:min(420px,45vw);padding:10px 14px;border:1px solid var(--line);border-radius:9px}.content{padding:24px;max-width:1600px;margin:auto}
+.page{display:none}.page.active{display:block}.title{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.title h1{margin:0;font-size:25px}.title p{margin:5px 0 0;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:18px;box-shadow:0 2px 8px #102b4608}.metric{font-size:25px;font-weight:800;margin-top:7px}.label{font-size:12px;color:var(--muted)}.icon{float:right;font-size:25px}
+.panels{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px}.panel{background:#fff;border:1px solid var(--line);border-radius:13px;padding:18px}.panel h3{margin:0 0 15px;font-size:16px}
+.btn{border:0;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700;background:var(--primary);color:#fff}.btn.secondary{background:#e9eef5;color:#24364a}.btn.success{background:var(--success)}.btn.danger{background:var(--danger)}.btn.warning{background:var(--accent);color:#171717}.actions{display:flex;gap:8px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:11px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{font-size:11px;text-transform:uppercase;color:var(--muted);background:#f8fafc}.tablewrap{overflow:auto}
+.badge{padding:4px 8px;border-radius:20px;font-size:11px;font-weight:800;display:inline-block}.ok{background:#dff5e8;color:#13733d}.low{background:#fff0cc;color:#8a5b00}.out{background:#ffe0e3;color:#a51e2b}
+.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.field label{display:block;font-size:12px;font-weight:700;margin-bottom:5px;color:#455267}.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #d9e0e9;border-radius:8px;background:#fff}.field textarea{min-height:80px}.full{grid-column:1/-1}
+.modal{display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.modalbox{background:#fff;border-radius:14px;width:min(850px,100%);max-height:90vh;overflow:auto;padding:22px}.modalhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.close{border:0;background:#eee;border-radius:50%;width:32px;height:32px;cursor:pointer}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}.quick .btn{padding:15px}
+.notice{padding:12px;border-radius:9px;margin-bottom:8px;background:#fff5d9;border-left:4px solid var(--accent);font-size:13px}
+.mobile{display:none}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(2,1fr)}.panels{grid-template-columns:1fr}.formgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.sidebar{transform:translateX(-100%);transition:.2s}.sidebar.open{transform:translateX(0)}.main{margin-left:0}.mobile{display:block}.top{padding:0 14px}.content{padding:15px}.grid{grid-template-columns:1fr 1fr}.quick{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr}.search{width:48%}}
+
+/* V7 software-style polish */
+.app-brand{letter-spacing:.4px}
+.topbar{backdrop-filter:blur(10px)}
+.install-hint{font-size:11px;color:var(--muted);margin-top:4px}
+.kpi-card{transition:transform .15s,box-shadow .15s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(20,63,103,.10)}
+.nav button.active{font-weight:800}
+.toast{position:fixed;right:22px;bottom:22px;z-index:12000;background:#173f67;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 10px 30px #0003;display:none;font-size:13px}
+.app-footer{padding:16px 24px;color:var(--muted);font-size:11px;text-align:center}
+@media(max-width:700px){.topbar{padding:10px}.userbar small{display:none}}
+</style>
+<style>
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#061827,#145b88);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px}.login-box{width:min(430px,100%);background:#fff;border-radius:22px;padding:32px;box-shadow:0 25px 80px #0008}.login-logo{font-size:38px}.login-box h1{margin:8px 0 4px}.login-box p{color:#6b7280;font-size:13px}.login-box label{font-size:12px;font-weight:800}.login-box input{box-sizing:border-box;width:100%;padding:13px;border:1px solid #d7dee8;border-radius:10px;margin:7px 0 14px}.login-error{display:none;background:#ffe6e9;color:#a51e2b;border-radius:9px;padding:10px;margin:10px 0;font-size:12px}.equip-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}.equip-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:17px;cursor:pointer;transition:.15s}.equip-card:hover{transform:translateY(-2px);border-color:#5f8eb3;box-shadow:0 8px 20px #123e6115}.equip-card .equip-name{font-size:19px;font-weight:800;margin:6px 0}.equip-card .equip-count{font-size:13px;color:var(--muted)}.userbar{display:flex;align-items:center;gap:8px}.avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#173f67;color:#fff;font-weight:800}.action-mini{padding:6px 9px!important;font-size:11px!important}.btn.danger{background:#ffe7e9;color:#a51e2b}.modalbox{max-height:90vh;overflow:auto}@media(max-width:900px){.equip-cards{grid-template-columns:1fr 1fr}}@media(max-width:600px){.equip-cards{grid-template-columns:1fr}}
+
+.password-box{max-width:620px}
+.security-note{background:#eef6ff;border:1px solid #cfe3f5;color:#173f67;border-radius:10px;padding:12px;margin:12px 0 18px;font-size:13px}
+.password-status{display:none;margin-top:12px;padding:10px;border-radius:9px;font-size:13px}
+.password-status.ok{display:block;background:#e8f7ef;color:#146c43}
+.password-status.err{display:block;background:#ffe8eb;color:#a51e2b}
+
+.role-badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#e8f1f8;color:#173f67;font-size:10px;font-weight:800;margin-top:2px}
+.admin-only{display:none}
+.role-card{border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
+.role-card h3{margin:0 0 8px}.perm-list{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.8}
+.admin-table td,.admin-table th{vertical-align:middle}
+</style>
+<meta name="application-name" content="MEDLOG MECHANICAL WORKSHOP STORE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MEDLOG MECHANICAL WORKSHOP">
+<meta name="theme-color" content="#173f67">
+<link rel="manifest" id="pwaManifest">
+</head>
+<body><div class="toast" id="toast"></div><div class="login-overlay" id="loginOverlay"><div class="login-box"><div class="login-logo">⚙️</div><h1>MEDLOG MECHANICAL WORKSHOP</h1><p>MEDLOG MECHANICAL WORKSHOP</p><div class="login-error" id="loginError">Invalid username or password.</div><label>USERNAME</label><input id="loginUser" value="admin" autocomplete="username"><label>PASSWORD</label><input id="loginPass" type="password" placeholder="Enter password" autocomplete="current-password"><button class="btn" id="loginButton" type="button" style="width:100%;padding:13px">🔐 Sign In</button><p class="install-hint" style="text-align:center">Online database • Supabase Authentication • GitHub Pages</p><p style="text-align:center;margin-top:14px">Sign in with your Supabase Auth account.<br><small>Username aliases: admin / dataentry / viewer</small></p></div></div>
+<aside class="sidebar" id="sidebar">
+<div class="brand">⚙️ MECHANICAL WORKSHOP<small>Inventory Management System</small></div>
+<div class="nav">
+<button data-page="dashboard" class="active">📊 Dashboard</button>
+<button data-page="stock">📦 Current Stock</button><button data-page="equipstock">🚜 Equipment-wise Stock</button>
+<div class="section">Transactions</div>
+<button data-page="stockin">➕ Stock In</button>
+<button data-page="stockout">➖ Stock Out</button>
+<button data-page="adjust">↔ Stock Adjustment</button>
+<div class="section">Management</div>
+<button data-page="items">🧩 Parts & Items</button>
+<button data-page="categories">🗂 Categories</button>
+<button data-page="suppliers">🏭 Suppliers</button>
+<button data-page="equipment">🚜 Equipment</button>
+<button data-page="battery">🔋 Battery</button>
+<button data-page="lubricant">🛢 Lubricants</button>
+<button data-page="tools">🛠 Tools</button>
+<div class="section">Reports</div>
+<button data-page="low">⚠ Low Stock</button>
+<button data-page="summary">📈 Inventory Summary</button>
+<button data-page="reports">🖨 Reports</button>
+<button data-page="admin" class="admin-only">👨‍💼 Administration</button><button data-page="settings">⚙ Settings & Backup</button>
+</div></aside>
+
+<main class="main">
+<header class="top"><button class="btn mobile" onclick="toggleSide()">☰</button><input id="globalSearch" class="search" placeholder="Search item, part number, equipment..." oninput="globalSearch()"><div id="today"></div><div class="userbar"><div class="avatar" id="userAvatar">A</div><div><b id="headerUser">Administrator</b><small style="display:block;color:var(--muted)" id="headerRole">Inventory Admin</small><span class="role-badge" id="roleBadge">ADMIN</span></div><button class="btn secondary action-mini" id="logoutButton">Logout</button></div></header>
+<div class="content">
+
+<section id="dashboard" class="page active">
+<div class="title"><div><h1>MEDLOG MECHANICAL WORKSHOP</h1><p>MEDLOG MECHANICAL WORKSHOP Overview</p></div><div class="actions"><button class="btn success" onclick="openModal('stockInModal')">＋ Stock In</button><button class="btn warning" onclick="openModal('stockOutModal')">− Stock Out</button></div></div>
+<div class="grid">
+<div class="card"><span class="icon">🧩</span><div class="label">Total Items</div><div class="metric" id="mItems">0</div></div>
+<div class="card"><span class="icon">📦</span><div class="label">Total Stock Quantity</div><div class="metric" id="mQty">0</div></div>
+<div class="card"><span class="icon">💰</span><div class="label">Inventory Value</div><div class="metric" id="mValue">৳0</div></div>
+<div class="card"><span class="icon">⚠️</span><div class="label">Low / Out of Stock</div><div class="metric" id="mLow">0 / 0</div></div>
+</div>
+<div class="quick"><button class="btn" onclick="showPage('items');openModal('itemModal')">＋ Add New Item</button><button class="btn success" onclick="openModal('stockInModal')">＋ Stock In</button><button class="btn warning" onclick="openModal('stockOutModal')">− Stock Out</button><button class="btn secondary" onclick="showPage('reports')">📊 Reports</button></div>
+<div class="panels"><div class="panel"><h3>Monthly Stock Movement</h3><canvas id="movementChart" height="130"></canvas></div><div class="panel"><h3>Category Distribution</h3><canvas id="categoryChart" height="130"></canvas></div></div>
+<div class="panels"><div class="panel"><h3>Recent Transactions</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Reference</th></tr></thead><tbody id="recentTx"></tbody></table></div></div><div class="panel"><h3>Low Stock Alerts</h3><div id="alerts"></div></div></div>
+</section>
+
+<section id="stock" class="page"><div class="title"><div><h1>Current Stock</h1><p>Live inventory balance</p></div><button class="btn secondary" onclick="printCurrentStock()">🖨 Print</button></div><div class="panel"><div class="actions" style="margin-bottom:12px"><input id="stockFilter" class="search" style="width:300px" placeholder="Search stock..." oninput="renderStock()"><select id="catFilter" onchange="renderStock()" style="padding:10px;border:1px solid #d9e0e9;border-radius:8px"><option value="">All Categories</option></select><select id="statusFilter" onchange="renderStock()" style="padding:10px;border:1px solid #d9e0e9;border-radius:8px"><option value="">All Status</option><option>IN STOCK</option><option>LOW STOCK</option><option>OUT OF STOCK</option></select></div><div class="tablewrap"><table><thead><tr><th>Code</th><th>Part No.</th><th>Item</th><th>Category</th><th>Brand</th><th>Unit</th><th>Stock</th><th>Min</th><th>Unit Cost</th><th>Value</th><th>Status</th></tr></thead><tbody id="stockBody"></tbody></table></div></div></section>
+
+<section id="equipstock" class="page"><div class="title"><div><h1>Equipment-wise Stock</h1><p>View spare-part consumption separately for each equipment</p></div></div><div class="equip-cards" id="equipStockCards"></div><div class="panel"><div class="title" style="margin-bottom:12px"><div><h3 id="equipStockTitle">Select Equipment</h3><p>Issued parts and consumption history</p></div><input id="equipStockSearch" class="search" style="width:300px" placeholder="Search part..." oninput="renderEquipDetail()"></div><div class="tablewrap"><table><thead><tr><th>Part No.</th><th>Item</th><th>Category</th><th>Total Issued</th><th>Last Issue</th><th>Technician</th><th>Purpose</th></tr></thead><tbody id="equipStockBody"><tr><td colspan="7">Select an equipment above.</td></tr></tbody></table></div></div></section><section id="stockin" class="page"><div class="title"><div><h1>Stock In</h1><p>Receive spare parts and materials</p></div><button class="btn success" onclick="openModal('stockInModal')">＋ New Stock In</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>Date</th><th>GRN</th><th>Item</th><th>Qty</th><th>Unit Cost</th><th>Total</th><th>Supplier</th><th>Action</th></tr></thead><tbody id="inBody"></tbody></table></div></div></section>
+
+<section id="stockout" class="page"><div class="title"><div><h1>Stock Out</h1><p>Issue parts to workshop/equipment</p></div><button class="btn warning" onclick="openModal('stockOutModal')">− New Stock Out</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>Date</th><th>Issue No.</th><th>Item</th><th>Qty</th><th>Issued To</th><th>Equipment</th><th>Purpose</th><th>Action</th></tr></thead><tbody id="outBody"></tbody></table></div></div></section>
+
+<section id="items" class="page"><div class="title"><div><h1>Parts & Items</h1><p>Item master database</p></div><button class="btn" onclick="openModal('itemModal')">＋ Add Item</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>Code</th><th>Part Number</th><th>Item Name</th><th>Category</th><th>Brand</th><th>Unit</th><th>Min</th><th>Cost</th><th>Location</th><th>Action</th></tr></thead><tbody id="itemsBody"></tbody></table></div></div></section>
+
+<section id="categories" class="page"><div class="title"><div><h1>Categories</h1></div><button class="btn" onclick="addCategory()">＋ Add Category</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>Category</th><th>Items</th><th>Action</th></tr></thead><tbody id="catBody"></tbody></table></div></div></section>
+<section id="suppliers" class="page"><div class="title"><div><h1>Suppliers</h1></div><button class="btn" onclick="addSupplier()">＋ Add Supplier</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>ID</th><th>Supplier</th><th>Contact</th><th>Phone</th><th>Product Category</th><th>Action</th></tr></thead><tbody id="supBody"></tbody></table></div></div></section>
+<section id="equipment" class="page"><div class="title"><div><h1>Equipment / Machines</h1></div><button class="btn" onclick="addEquipment()">＋ Add Equipment</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>Machine ID</th><th>Equipment / Machine</th><th>Type</th><th>Manufacturer</th><th>Model</th><th>Fleet/Serial</th><th>Location</th><th>Status</th><th>Action</th></tr></thead><tbody id="equipBody"></tbody></table></div></div></section>
+
+<section id="battery" class="page"><div class="title"><div><h1>Battery Management</h1><p>Battery condition and replacement tracking</p></div><button class="btn" onclick="addBattery()">＋ Add Battery</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>ID</th><th>Type</th><th>Brand</th><th>Voltage</th><th>Capacity</th><th>Equipment</th><th>Install Date</th><th>Status</th><th>Action</th></tr></thead><tbody id="batteryBody"></tbody></table></div></div></section>
+<section id="lubricant" class="page"><div class="title"><div><h1>Lubricant Management</h1></div><button class="btn" onclick="addLubricant()">＋ Add Lubricant</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>Name</th><th>Type</th><th>Brand</th><th>Grade</th><th>Pack Size</th><th>Stock</th><th>Min</th><th>Action</th></tr></thead><tbody id="lubBody"></tbody></table></div></div></section>
+<section id="tools" class="page"><div class="title"><div><h1>Tools Management</h1></div><button class="btn" onclick="addTool()">＋ Add Tool</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>ID</th><th>Tool</th><th>Category</th><th>Brand</th><th>Qty</th><th>Condition</th><th>Assigned To</th><th>Status</th><th>Action</th></tr></thead><tbody id="toolBody"></tbody></table></div></div></section>
+
+<section id="low" class="page"><div class="title"><div><h1>Low Stock & Critical Items</h1></div></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>Item</th><th>Part No.</th><th>Current</th><th>Minimum</th><th>Reorder Qty</th><th>Supplier</th><th>Status</th></tr></thead><tbody id="lowBody"></tbody></table></div></div></section>
+
+<section id="summary" class="page"><div class="title"><div><h1>Inventory Summary</h1><p>Management overview</p></div></div><div class="grid"><div class="card"><div class="label">Total Inventory Value</div><div class="metric" id="sValue">৳0</div></div><div class="card"><div class="label">Stock In Transactions</div><div class="metric" id="sIn">0</div></div><div class="card"><div class="label">Stock Out Transactions</div><div class="metric" id="sOut">0</div></div><div class="card"><div class="label">Suppliers</div><div class="metric" id="sSup">0</div></div></div><div class="panels"><div class="panel"><h3>Category-wise Stock Value</h3><div id="summaryCats"></div></div><div class="panel"><h3>Most Used Parts</h3><div id="topUsed"></div></div></div></section>
+
+<section id="reports" class="page"><div class="title"><div><h1>Reports</h1><p>Print-ready inventory reports</p></div><button class="btn" onclick="printCurrentStock()">🖨 Print Current Stock</button></div><div class="panel"><h3>Transaction History</h3><div class="actions" style="margin-bottom:12px"><button class="btn secondary" onclick="exportCSV()">⬇ Export CSV</button><button class="btn secondary" onclick="window.print()">🖨 Print</button></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Reference</th><th>Person/Supplier</th><th>Equipment</th></tr></thead><tbody id="txBody"></tbody></table></div></div></section>
+
+<section id="adjust" class="page"><div class="title"><div><h1>Stock Adjustment</h1><p>Correct physical count, damage, loss or return</p></div><button class="btn" onclick="openModal('adjustModal')">＋ Adjustment</button></div><div class="panel"><div class="tablewrap"><table><thead><tr><th>Date</th><th>Item</th><th>Previous</th><th>Adjustment</th><th>New Stock</th><th>Reason</th></tr></thead><tbody id="adjBody"></tbody></table></div></div></section>
+
+
+<section id="admin" class="page">
+<div class="title"><div><h1>Administration</h1><p>Manage users, access and administrator controls</p></div></div>
+<div class="panels">
+<div class="role-card">
+<h3>👨‍💼 Administrator</h3>
+<p class="label">Full system access</p>
+<ul class="perm-list">
+<li>Manage parts, categories, suppliers and equipment</li>
+<li>Add, edit and delete Stock In / Stock Out</li>
+<li>Stock adjustment and reports</li>
+<li>Manage Data Entry access</li>
+<li>Change Administrator password</li>
+</ul>
+</div>
+<div class="role-card">
+<h3>🧑‍💻 Data Entry Operator</h3>
+<p class="label">Operational data-entry access</p>
+<ul class="perm-list">
+<li>Dashboard and Current Stock</li>
+<li>Equipment-wise Stock</li>
+<li>Stock In and Stock Out entry</li>
+<li>Cannot delete/edit transactions</li>
+<li>Cannot access administration/settings</li>
+</ul>
+</div>
+<div class="role-card">
+<h3>👤 Viewer / User</h3>
+<p class="label">Read-only access</p>
+<ul class="perm-list">
+<li>Dashboard</li>
+<li>Current Stock</li>
+<li>Equipment-wise Stock</li>
+<li>Summary and Reports</li>
+<li>Cannot add, edit or delete stock transactions</li>
+<li>Cannot access administration or settings</li>
+</ul>
+</div>
+</div>
+<div class="panel" style="margin-top:16px">
+<h3>👥 User Accounts</h3>
+<div class="tablewrap"><table class="admin-table"><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+<tbody><tr><td><b>admin</b></td><td>Administrator</td><td><span class="role-badge">FULL ACCESS</span></td><td>Use Settings to change admin password</td></tr>
+<tr><td><b>dataentry</b></td><td>Data Entry</td><td><span class="role-badge">ACTIVE</span></td><td><button class="btn" style="padding:7px 10px" onclick="openDataEntryPassword()">🔑 Change Password</button></td></tr><tr><td><b>viewer</b></td><td>Viewer / Read Only</td><td><span class="role-badge">ACTIVE</span></td><td><button class="btn" style="padding:7px 10px" onclick="openViewerPassword()">🔑 Change Password</button></td></tr></tbody></table></div>
+</div>
+<div class="panel" style="margin-top:16px">
+<h3>🔐 Data Entry Password</h3>
+<form id="dataEntryPasswordForm">
+<div class="formgrid">
+<div class="field"><label>Current Data Entry Password *</label><input id="deCurrent" type="password" required></div>
+<div class="field"><label>New Password *</label><input id="deNew" type="password" minlength="6" required></div>
+<div class="field"><label>Confirm New Password *</label><input id="deConfirm" type="password" minlength="6" required></div>
+</div>
+<div class="actions" style="margin-top:16px"><button class="btn" type="submit">💾 Update Data Entry Password</button></div>
+<div id="deStatus" class="password-status"></div>
+</form>
+</div>
+<div class="panel" style="margin-top:16px">
+<h3>👤 Viewer Password</h3>
+<form id="viewerPasswordForm">
+<div class="formgrid">
+<div class="field"><label>Current Viewer Password *</label><input id="vCurrent" type="password" required></div>
+<div class="field"><label>New Password *</label><input id="vNew" type="password" minlength="6" required></div>
+<div class="field"><label>Confirm New Password *</label><input id="vConfirm" type="password" minlength="6" required></div>
+</div>
+<div class="actions" style="margin-top:16px"><button class="btn" type="submit">💾 Update Viewer Password</button></div>
+<div id="vStatus" class="password-status"></div>
+</form>
+</div>
+</section>
+<section id="settings" class="page">
+<div class="title"><div><h1>Settings & Backup</h1><p>Administrator security and local inventory data management</p></div></div>
+<div class="panel password-box">
+<h3>🔐 Change Admin Password</h3>
+<div class="security-note">Change the default password after first login. This standalone HTML application stores the password locally in this browser.</div>
+<form id="passwordForm">
+<div class="formgrid">
+<div class="field full"><label>Current Password *</label><input id="currentPassword" type="password" required autocomplete="current-password"></div>
+<div class="field"><label>New Password *</label><input id="newPassword" type="password" minlength="6" required autocomplete="new-password"></div>
+<div class="field"><label>Confirm New Password *</label><input id="confirmPassword" type="password" minlength="6" required autocomplete="new-password"></div>
+</div>
+<div class="actions" style="margin-top:16px"><button class="btn" type="submit">🔑 Change Password</button></div>
+<div id="passwordStatus" class="password-status"></div>
+</form>
+</div>
+<div class="panel"><h3>💾 Data Management</h3><div class="actions"><button class="btn" onclick="backup()">⬇ Export Full Backup</button><label class="btn secondary">⬆ Import Backup<input type="file" accept=".json" onchange="restore(event)" hidden></label><button class="btn danger" onclick="clearData()">🗑 Clear All Data</button></div><hr><p class="label">Data is stored locally in this browser using LocalStorage. Export a backup regularly before clearing browser data.</p></div>
+</section>
+
+</div></main>
+
+<!-- MODALS -->
+<div class="modal" id="itemModal"><div class="modalbox"><div class="modalhead"><h2>Add Item</h2><button class="close" onclick="closeModal('itemModal')">×</button></div><form id="itemForm"><div class="formgrid">
+<div class="field"><label>Item Code *</label><input name="code" required></div><div class="field"><label>Part Number *</label><input name="part" required></div><div class="field"><label>Item Name *</label><input name="name" required></div>
+<div class="field"><label>Category *</label><select name="cat" id="itemCat" required></select></div><div class="field"><label>Brand</label><input name="brand"></div><div class="field"><label>Unit</label><select name="unit"><option>PCS</option><option>SET</option><option>LTR</option><option>KG</option><option>MTR</option><option>BOX</option><option>PAIR</option></select></div>
+<div class="field"><label>Opening Stock</label><input name="stock" type="number" min="0" value="0"></div><div class="field"><label>Minimum Stock</label><input name="min" type="number" min="0" value="5"></div><div class="field"><label>Unit Cost (৳)</label><input name="cost" type="number" min="0" step="0.01" value="0"></div>
+<div class="field"><label>Location</label><input name="loc" placeholder="Main Store / Rack A1"></div><div class="field"><label>Supplier</label><input name="supplier"></div><div class="field"><label>Equipment Compatibility</label><input name="compat"></div>
+</div><div class="actions" style="margin-top:16px"><button class="btn" type="submit">Save Item</button><button class="btn secondary" type="button" onclick="closeModal('itemModal')">Cancel</button></div></form></div></div>
+
+<div class="modal" id="stockInModal"><div class="modalbox"><div class="modalhead"><h2>Stock In</h2><button class="close" onclick="closeModal('stockInModal')">×</button></div><form id="inForm"><div class="formgrid">
+<div class="field"><label>Date</label><input name="date" type="date" required></div><div class="field"><label>GRN / Reference No.</label><input name="ref" required></div><div class="field"><label>Item *</label><select name="item" id="inItem" required></select></div>
+<div class="field"><label>Quantity *</label><input name="qty" type="number" min="1" required></div><div class="field"><label>Unit Cost (৳)</label><input name="cost" type="number" min="0" step="0.01" required></div><div class="field"><label>Supplier</label><input name="supplier"></div><div class="field full"><label>Remarks</label><textarea name="remarks"></textarea></div>
+</div><div class="actions" style="margin-top:16px"><button class="btn success" type="submit">Record Stock In</button></div></form></div></div>
+
+<div class="modal" id="stockOutModal"><div class="modalbox"><div class="modalhead"><h2>Stock Out</h2><button class="close" onclick="closeModal('stockOutModal')">×</button></div><form id="outForm"><div class="formgrid">
+<div class="field"><label>Date</label><input name="date" type="date" required></div><div class="field"><label>Issue No.</label><input name="ref" required></div><div class="field"><label>Item *</label><select name="item" id="outItem" required></select></div>
+<div class="field"><label>Quantity *</label><input name="qty" type="number" min="1" required></div><div class="field"><label>Issued To / Technician</label><input name="person"></div><div class="field"><label>Equipment</label><input name="equipment" placeholder="RT-530E-2 / Forklift"></div><div class="field full"><label>Purpose / Work Order</label><textarea name="purpose"></textarea></div>
+</div><div class="actions" style="margin-top:16px"><button class="btn warning" type="submit">Record Stock Out</button></div></form></div></div>
+
+<div class="modal" id="adjustModal"><div class="modalbox"><div class="modalhead"><h2>Stock Adjustment</h2><button class="close" onclick="closeModal('adjustModal')">×</button></div><form id="adjForm"><div class="formgrid">
+<div class="field"><label>Date</label><input name="date" type="date" required></div><div class="field"><label>Item</label><select name="item" id="adjItem" required></select></div><div class="field"><label>Adjustment (+ / −)</label><input name="qty" type="number" required></div><div class="field"><label>Reason</label><select name="reason"><option>Physical Count Difference</option><option>Damaged</option><option>Lost</option><option>Expired</option><option>Returned</option><option>Correction</option></select></div>
+</div><div class="actions" style="margin-top:16px"><button class="btn" type="submit">Apply Adjustment</button></div></form></div></div>
+
+<div class="modal" id="txEditModal"><div class="modalbox"><div class="modalhead"><h2 id="txEditTitle">Edit Transaction</h2><button class="close" type="button" onclick="closeModal('txEditModal')">×</button></div><form id="txEditForm"><input type="hidden" name="id"><input type="hidden" name="type"><div class="formgrid"><div class="field"><label>Date</label><input name="date" type="date" required></div><div class="field"><label>Reference No.</label><input name="ref" required></div><div class="field"><label>Item</label><select name="item" id="editTxItem" required></select></div><div class="field"><label>Quantity</label><input name="qty" type="number" min="1" required></div><div class="field" id="editCostField"><label>Unit Cost</label><input name="cost" type="number" min="0" step="0.01"></div><div class="field"><label>Supplier / Technician</label><input name="person"></div><div class="field" id="editEquipmentField"><label>Equipment</label><input name="equipment"></div><div class="field full"><label>Purpose / Remarks</label><textarea name="remarks"></textarea></div></div><div class="actions" style="margin-top:16px"><button class="btn" type="submit">💾 Save Changes</button><button class="btn secondary" type="button" onclick="closeModal('txEditModal')">Cancel</button></div></form></div></div>
+<script>
+const KEY='mw_inventory_v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'null')||{
+items:[
+{id:'I001',code:'FLT-001',part:'FF5632',name:'Fuel Filter',cat:'Filters',brand:'Fleetguard',unit:'PCS',stock:12,min:5,cost:1550,loc:'Main Store / A1',supplier:'Workshop Supplier',compat:'RT Crane / Generator'},
+{id:'I002',code:'FLT-002',part:'LF3970',name:'Engine Oil Filter',cat:'Filters',brand:'Fleetguard',unit:'PCS',stock:18,min:6,cost:1350,loc:'Main Store / A1',supplier:'Workshop Supplier',compat:'Diesel Engine'},
+{id:'I003',code:'HYD-001',part:'SH70068',name:'Hydraulic Filter',cat:'Hydraulic Parts',brand:'HIFI',unit:'PCS',stock:4,min:6,cost:4200,loc:'Hydraulic Store / B2',supplier:'Hydraulic Supplier',compat:'Reach Stacker'},
+{id:'I004',code:'LUB-001',part:'EO15W40',name:'Engine Oil 15W-40',cat:'Engine Oil',brand:'Shell',unit:'LTR',stock:85,min:30,cost:620,loc:'Lubricant Store',supplier:'Oil Supplier',compat:'Diesel Equipment'},
+{id:'I005',code:'BAT-001',part:'BAT-12V200',name:'Lead Acid Battery 12V 200Ah',cat:'Batteries',brand:'Rahimafrooz',unit:'PCS',stock:3,min:2,cost:24500,loc:'Battery Room',supplier:'Battery Supplier',compat:'Forklift / Tractor'}
+],categories:['Engine Parts','Hydraulic Parts','Electrical Components','Filters','Lubricants','Batteries','Tyres','Tools','Consumables','Safety Items','Engine Oil'],suppliers:[
+{id:'S001',name:'Workshop Supplier',contact:'Sales Desk',phone:'01XXXXXXXXX',cat:'Spare Parts'},
+{id:'S002',name:'Hydraulic Supplier',contact:'Service',phone:'01XXXXXXXXX',cat:'Hydraulic Parts'},
+{id:'S003',name:'Oil Supplier',contact:'Sales',phone:'01XXXXXXXXX',cat:'Lubricants'},
+{id:'S004',name:'Battery Supplier',contact:'Sales',phone:'01XXXXXXXXX',cat:'Batteries'}],
+equipment:[{id:'EQ001',name:'RT-530E-2',type:'Rough Terrain Crane',man:'Grove Manitowoc',model:'RT-530E-2',fleet:'RT530E2',loc:'Workshop',status:'ACTIVE'},{id:'EQ002',name:'Reach Stacker',type:'Reach Stacker',man:'Terex',model:'DRF',fleet:'RS-01',loc:'Yard',status:'ACTIVE'}],
+batteries:[],lubricants:[],tools:[],stockIn:[],stockOut:[],adjustments:[],transactions:[]
+};
+normalizeEquipmentIds();
+function save(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function money(n){return '৳'+Number(n||0).toLocaleString('en-BD',{maximumFractionDigits:2})}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function today(){return new Date().toISOString().slice(0,10)}
+document.getElementById('today').textContent=new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+function toggleSide(){document.getElementById('sidebar').classList.toggle('open')}
+function showPage(id){
+if(!guardPage(id))return;
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===id));if(innerWidth<701)document.getElementById('sidebar').classList.remove('open');renderAll()}
+document.querySelectorAll('.nav button[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+function openModal(id){document.getElementById(id).classList.add('show');document.querySelectorAll('#'+id+' input[type=date]').forEach(x=>x.value=today());populateSelects()}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+function status(i){return i.stock<=0?['OUT OF STOCK','out']:i.stock<=i.min?['LOW STOCK','low']:['IN STOCK','ok']}
+function populateSelects(){
+ let opts=db.items.map(i=>`<option value="${i.id}">${esc(i.code)} — ${esc(i.name)} (${i.stock})</option>`).join('');
+ ['inItem','outItem','adjItem'].forEach(id=>{let e=document.getElementById(id);if(e)e.innerHTML=opts});
+ document.getElementById('itemCat').innerHTML=db.categories.map(c=>`<option>${esc(c)}</option>`).join('');
+ document.getElementById('catFilter').innerHTML='<option value="">All Categories</option>'+db.categories.map(c=>`<option>${esc(c)}</option>`).join('');
+}
+function renderDashboard(){
+ let q=db.items.reduce((a,i)=>a+i.stock,0), val=db.items.reduce((a,i)=>a+i.stock*i.cost,0), low=db.items.filter(i=>i.stock>0&&i.stock<=i.min).length,out=db.items.filter(i=>i.stock<=0).length;
+ mItems.textContent=db.items.length;mQty.textContent=q.toLocaleString();mValue.textContent=money(val);mLow.textContent=low+' / '+out;
+ recentTx.innerHTML=db.transactions.slice(-8).reverse().map(t=>`<tr><td>${t.date}</td><td><span class="badge ${t.type==='STOCK IN'?'ok':t.type==='STOCK OUT'?'low':'out'}">${t.type}</span></td><td>${esc(t.itemName)}</td><td>${t.qty}</td><td>${esc(t.ref||'')}</td></tr>`).join('')||'<tr><td colspan="5">No transactions yet.</td></tr>';
+ alerts.innerHTML=db.items.filter(i=>i.stock<=i.min).slice(0,8).map(i=>`<div class="notice"><b>${esc(i.name)}</b> — ${i.stock} ${i.unit} available (minimum ${i.min})</div>`).join('')||'<p class="label">No low stock alerts.</p>';
+}
+let movementChart,categoryChart;
+function charts(){if(typeof Chart==='undefined')return; 
+ let labels=[],ins=[],outs=[],now=new Date();
+ for(let k=5;k>=0;k--){let d=new Date(now.getFullYear(),now.getMonth()-k,1), key=d.toISOString().slice(0,7);labels.push(d.toLocaleDateString('en',{month:'short'}));ins.push(db.stockIn.filter(x=>x.date.slice(0,7)===key).reduce((a,x)=>a+Number(x.qty),0));outs.push(db.stockOut.filter(x=>x.date.slice(0,7)===key).reduce((a,x)=>a+Number(x.qty),0))}
+ if(movementChart)movementChart.destroy();movementChart=new Chart(document.getElementById('movementChart'),{type:'bar',data:{labels,datasets:[{label:'Stock In',data:ins},{label:'Stock Out',data:outs}]},options:{responsive:true}});
+ let map={};db.items.forEach(i=>map[i.cat]=(map[i.cat]||0)+i.stock);
+ if(categoryChart)categoryChart.destroy();categoryChart=new Chart(document.getElementById('categoryChart'),{type:'doughnut',data:{labels:Object.keys(map),datasets:[{data:Object.values(map)}]},options:{responsive:true}});
+}
+function renderStock(){
+ let q=(document.getElementById('stockFilter')?.value||'').toLowerCase(),cat=document.getElementById('catFilter')?.value||'',sf=document.getElementById('statusFilter')?.value||'';
+ stockBody.innerHTML=db.items.filter(i=>{let st=status(i)[0];return(!q||[i.code,i.part,i.name,i.brand,i.cat].join(' ').toLowerCase().includes(q))&&(!cat||i.cat===cat)&&(!sf||st===sf)}).map(i=>{let st=status(i);return `<tr><td>${esc(i.code)}</td><td>${esc(i.part)}</td><td><b>${esc(i.name)}</b></td><td>${esc(i.cat)}</td><td>${esc(i.brand)}</td><td>${i.unit}</td><td><b>${i.stock}</b></td><td>${i.min}</td><td>${money(i.cost)}</td><td>${money(i.stock*i.cost)}</td><td><span class="badge ${st[1]}">${st[0]}</span></td></tr>`}).join('')||'<tr><td colspan="11">No items found.</td></tr>';
+}
+function renderItems(){itemsBody.innerHTML=db.items.map(i=>`<tr><td>${esc(i.code)}</td><td>${esc(i.part)}</td><td><b>${esc(i.name)}</b></td><td>${esc(i.cat)}</td><td>${esc(i.brand)}</td><td>${esc(i.unit)}</td><td>${i.min}</td><td>${money(i.cost)}</td><td>${esc(i.loc)}</td><td><button class="btn action-mini admin-action" onclick="editItem('${i.id}')">Edit</button> <button class="btn danger action-mini admin-action" onclick="deleteItem('${i.id}')">Delete</button></td></tr>`).join('')}
+function renderTransactions(){
+inBody.innerHTML=db.stockIn.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${esc(x.ref)}</td><td>${esc(x.itemName)}</td><td>${x.qty}</td><td>${money(x.cost)}</td><td>${money(x.qty*x.cost)}</td><td>${esc(x.supplier)}</td><td><button class="btn action-mini admin-action" onclick="editTx('${x.id}','STOCK IN')">Edit</button> <button class="btn danger action-mini admin-action" onclick="deleteTx('${x.id}','STOCK IN')">Delete</button></td></tr>`).join('')||'<tr><td colspan="8">No Stock In records.</td></tr>';
+outBody.innerHTML=db.stockOut.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${esc(x.ref)}</td><td>${esc(x.itemName)}</td><td>${x.qty}</td><td>${esc(x.person)}</td><td>${esc(x.equipment)}</td><td>${esc(x.purpose)}</td><td><button class="btn action-mini admin-action" onclick="editTx('${x.id}','STOCK OUT')">Edit</button> <button class="btn danger action-mini admin-action" onclick="deleteTx('${x.id}','STOCK OUT')">Delete</button></td></tr>`).join('')||'<tr><td colspan="8">No Stock Out records.</td></tr>';
+txBody.innerHTML=db.transactions.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${x.type}</td><td>${esc(x.itemName)}</td><td>${x.qty}</td><td>${esc(x.ref)}</td><td>${esc(x.person||x.supplier||'')}</td><td>${esc(x.equipment||'')}</td></tr>`).join('')||'<tr><td colspan="7">No transactions.</td></tr>';
+}
+function renderOther(){
+catBody.innerHTML=db.categories.map(c=>`<tr><td>${esc(c)}</td><td>${db.items.filter(i=>i.cat===c).length}</td><td><button class="btn action-mini admin-action" onclick="editCategory('${esc(c).replace(/'/g,"\\'")}')">Edit</button> <button class="btn danger action-mini admin-action" onclick="delCat('${esc(c).replace(/'/g,"\\'")}')">Delete</button></td></tr>`).join('');
+supBody.innerHTML=db.suppliers.map(s=>`<tr><td>${s.id}</td><td>${esc(s.name)}</td><td>${esc(s.contact)}</td><td>${esc(s.phone)}</td><td>${esc(s.cat)}</td><td><button class="btn action-mini admin-action" onclick="editSupplier('${s.id}')">Edit</button> <button class="btn danger action-mini admin-action" onclick="deleteSupplier('${s.id}')">Delete</button></td></tr>`).join('');
+equipBody.innerHTML=db.equipment.map(e=>`<tr><td>${e.id}</td><td><b>${esc(e.name)}</b></td><td>${esc(e.type)}</td><td>${esc(e.man)}</td><td>${esc(e.model)}</td><td>${esc(e.fleet)}</td><td>${esc(e.loc)}</td><td>${esc(e.status)}</td><td><button class="btn action-mini admin-action" onclick="editEquipment('${e.id}')">Edit</button> <button class="btn danger action-mini admin-action" onclick="deleteEquipment('${e.id}')">Delete</button></td></tr>`).join('');
+batteryBody.innerHTML=db.batteries.map(b=>`<tr><td>${b.id}</td><td>${esc(b.type)}</td><td>${esc(b.brand)}</td><td>${b.voltage} V</td><td>${b.ah} Ah</td><td>${esc(b.equipment)}</td><td>${b.install}</td><td>${esc(b.status)}</td><td><button class="btn action-mini admin-action" onclick="editBattery('${b.id}')">Edit</button> <button class="btn danger action-mini admin-action" onclick="deleteBattery('${b.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="9">No battery records.</td></tr>';
+lubBody.innerHTML=db.lubricants.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.type)}</td><td>${esc(x.brand)}</td><td>${esc(x.grade)}</td><td>${esc(x.pack)}</td><td>${x.stock}</td><td>${x.min}</td><td><button class="btn action-mini admin-action" onclick="editLubricant('${x.name.replace(/'/g,"\\'")}')">Edit</button> <button class="btn danger action-mini admin-action" onclick="deleteLubricant('${x.name.replace(/'/g,"\\'")}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="8">No lubricant records.</td></tr>';
+toolBody.innerHTML=db.tools.map(x=>`<tr><td>${x.id}</td><td>${esc(x.name)}</td><td>${esc(x.cat)}</td><td>${esc(x.brand)}</td><td>${x.qty}</td><td>${esc(x.condition)}</td><td>${esc(x.assigned)}</td><td>${esc(x.status)}</td><td><button class="btn action-mini admin-action" onclick="editTool('${x.id}')">Edit</button> <button class="btn danger action-mini admin-action" onclick="deleteTool('${x.id}')">Delete</button></td></tr>`).join('')||'<tr><td colspan="9">No tools records.</td></tr>';
+lowBody.innerHTML=db.items.filter(i=>i.stock<=i.min).map(i=>{let st=status(i);return `<tr><td>${esc(i.name)}</td><td>${esc(i.part)}</td><td>${i.stock}</td><td>${i.min}</td><td>${Math.max(i.min*2-i.stock,0)}</td><td>${esc(i.supplier)}</td><td><span class="badge ${st[1]}">${st[0]}</span></td></tr>`}).join('')||'<tr><td colspan="7">No low stock items.</td></tr>';
+adjBody.innerHTML=db.adjustments.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${esc(x.itemName)}</td><td>${x.prev}</td><td>${x.qty>0?'+':''}${x.qty}</td><td>${x.newStock}</td><td>${esc(x.reason)}</td></tr>`).join('')||'<tr><td colspan="6">No adjustments.</td></tr>'
+}
+function renderSummary(){let val=db.items.reduce((a,i)=>a+i.stock*i.cost,0);sValue.textContent=money(val);sIn.textContent=db.stockIn.length;sOut.textContent=db.stockOut.length;sSup.textContent=db.suppliers.length;let map={};db.items.forEach(i=>map[i.cat]=(map[i.cat]||0)+i.stock*i.cost);summaryCats.innerHTML=Object.entries(map).sort((a,b)=>b[1]-a[1]).map(x=>`<div style="display:flex;justify-content:space-between;padding:9px;border-bottom:1px solid var(--line)"><span>${esc(x[0])}</span><b>${money(x[1])}</b></div>`).join('');let use={};db.stockOut.forEach(x=>use[x.itemId]=(use[x.itemId]||0)+x.qty);topUsed.innerHTML=Object.entries(use).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>{let i=db.items.find(i=>i.id===x[0]);return `<div style="padding:9px;border-bottom:1px solid var(--line)">${esc(i?.name||'Unknown')} <b style="float:right">${x[1]} ${i?.unit||''}</b></div>`}).join('')||'<p class="label">No Stock Out history.</p>'}
+
+function migrateTxIds(){let changed=false;[...(db.stockIn||[]),...(db.stockOut||[]),...(db.transactions||[])].forEach(x=>{if(!x.id){x.id='TX'+Date.now()+Math.random().toString(36).slice(2,8);changed=true}});if(changed)localStorage.setItem(KEY,JSON.stringify(db))}
+migrateTxIds();
+let selectedEquipment='';
+function renderEquipStock(){const box=document.getElementById('equipStockCards');if(!box)return;const totals={};(db.stockOut||[]).forEach(x=>{if(x.equipment)totals[x.equipment]=(totals[x.equipment]||0)+Number(x.qty)});box.innerHTML=(db.equipment||[]).map(e=>`<div class="equip-card" onclick="selectEquip('${esc(e.name).replace(/'/g,"\\'")}')"><div class="label">${esc(e.type)}</div><div class="equip-name">🚜 ${esc(e.name)}</div><div class="equip-count">${totals[e.name]||0} parts issued · ${esc(e.loc||'')}</div></div>`).join('')||'<div class="panel">No equipment found.</div>'}
+function selectEquip(name){selectedEquipment=name;document.getElementById('equipStockTitle').textContent='Equipment: '+name;renderEquipDetail()}
+function renderEquipDetail(){const body=document.getElementById('equipStockBody');if(!body||!selectedEquipment)return;const q=(document.getElementById('equipStockSearch').value||'').toLowerCase(),map={};(db.stockOut||[]).filter(x=>x.equipment===selectedEquipment).forEach(x=>{if(q&&!((x.itemName||'')+' '+(x.ref||'')).toLowerCase().includes(q))return;if(!map[x.itemId])map[x.itemId]={name:x.itemName,qty:0,last:x.date,person:x.person||'',purpose:x.purpose||''};map[x.itemId].qty+=Number(x.qty);if(x.date>=map[x.itemId].last){map[x.itemId].last=x.date;map[x.itemId].person=x.person||'';map[x.itemId].purpose=x.purpose||''}});body.innerHTML=Object.entries(map).map(([id,x])=>{const i=db.items.find(a=>a.id===id)||{};return `<tr><td>${esc(i.part||'')}</td><td><b>${esc(x.name)}</b></td><td>${esc(i.cat||'')}</td><td>${x.qty}</td><td>${x.last}</td><td>${esc(x.person)}</td><td>${esc(x.purpose)}</td></tr>`}).join('')||'<tr><td colspan="7">No parts issued to this equipment.</td></tr>'}
+function editTx(id,type){
+if(!isAdmin()){alert('Administrator access required.');return;}
+const arr=type==='STOCK IN'?db.stockIn:db.stockOut,x=arr.find(v=>v.id===id);if(!x){alert('This old transaction cannot be edited. New transactions can be edited.');return}const f=document.getElementById('txEditForm');f.elements.id.value=id;f.elements.type.value=type;f.elements.date.value=x.date||today();f.elements.ref.value=x.ref||'';f.elements.qty.value=x.qty||1;f.elements.cost.value=x.cost||0;f.elements.person.value=type==='STOCK IN'?(x.supplier||''):(x.person||'');f.elements.equipment.value=x.equipment||'';f.elements.remarks.value=x.remarks||x.purpose||'';document.getElementById('editTxItem').innerHTML=db.items.map(i=>`<option value="${i.id}">${esc(i.code)} — ${esc(i.name)}</option>`).join('');document.getElementById('editTxItem').value=x.itemId;document.getElementById('editEquipmentField').style.display=type==='STOCK OUT'?'block':'none';document.getElementById('txEditTitle').textContent='Edit '+type;openModal('txEditModal')}
+function deleteTx(id,type){
+if(!isAdmin()){alert('Administrator access required.');return;}
+if(!confirm('Delete this transaction? The stock balance will be reversed.'))return;const arr=type==='STOCK IN'?db.stockIn:db.stockOut,idx=arr.findIndex(x=>x.id===id);if(idx<0)return;const x=arr[idx],item=db.items.find(i=>i.id===x.itemId);if(!item)return;if(type==='STOCK IN'){if(Number(item.stock)<Number(x.qty)){alert('Cannot delete: current stock is lower than this receipt quantity.');return}item.stock-=Number(x.qty)}else item.stock+=Number(x.qty);arr.splice(idx,1);db.transactions=db.transactions.filter(t=>t.id!==id);save();alert('Transaction deleted and stock reversed.')}
+document.getElementById('txEditForm').onsubmit=function(e){e.preventDefault();const f=new FormData(e.target),type=f.get('type'),arr=type==='STOCK IN'?db.stockIn:db.stockOut,x=arr.find(v=>v.id===f.get('id')),old=db.items.find(i=>i.id===x.itemId),nw=db.items.find(i=>i.id===f.get('item')),qty=Number(f.get('qty'));if(!x||!old||!nw||qty<1)return;if(type==='STOCK IN'){if(old.stock<x.qty){alert('Cannot edit: current stock is insufficient to reverse the old receipt.');return}old.stock-=Number(x.qty);nw.stock+=qty}else{old.stock+=Number(x.qty);if(nw.stock<qty){old.stock-=Number(x.qty);alert('Insufficient stock for the new Stock Out quantity.');return}nw.stock-=qty}Object.assign(x,{date:f.get('date'),ref:f.get('ref'),itemId:nw.id,itemName:nw.name,qty,cost:Number(f.get('cost')||0),supplier:type==='STOCK IN'?f.get('person'):'',person:type==='STOCK OUT'?f.get('person'):'',equipment:f.get('equipment')||'',purpose:f.get('remarks')||'',remarks:f.get('remarks')||''});const log=db.transactions.find(t=>t.id===x.id);if(log)Object.assign(log,x,{type});save();closeModal('txEditModal');alert('Transaction updated successfully.')};
+function renderAll(){populateSelects();renderDashboard();renderStock();renderItems();renderTransactions();renderOther();renderSummary();renderEquipStock();renderEquipDetail();if(document.getElementById('dashboard').classList.contains('active'))charts();if(typeof applyRoleUI==='function')applyRoleUI()}
+document.getElementById('itemForm').onsubmit=e=>{e.preventDefault();if(!isAdmin()){alert('Administrator access required.');return;}let f=new FormData(e.target);if(db.items.some(i=>i.code===f.get('code')||i.part===f.get('part'))){alert('Item Code or Part Number already exists.');return}db.items.push({id:'I'+Date.now(),code:f.get('code'),part:f.get('part'),name:f.get('name'),cat:f.get('cat'),brand:f.get('brand'),unit:f.get('unit'),stock:+f.get('stock'),min:+f.get('min'),cost:+f.get('cost'),loc:f.get('loc'),supplier:f.get('supplier'),compat:f.get('compat')});save();e.target.reset();closeModal('itemModal');alert('Item saved successfully.')};
+document.getElementById('inForm').onsubmit=e=>{e.preventDefault();if(!(isAdmin()||isDataEntry())){alert('Data Entry or Administrator access required.');return;}let f=new FormData(e.target),i=db.items.find(x=>x.id===f.get('item')),qty=+f.get('qty'),cost=+f.get('cost');if(!i)return;i.stock+=qty;let x={id:'TX'+Date.now()+Math.random().toString(36).slice(2,8),date:f.get('date'),ref:f.get('ref'),itemId:i.id,itemName:i.name,qty,cost,supplier:f.get('supplier'),remarks:f.get('remarks')};db.stockIn.push(x);db.transactions.push({...x,type:'STOCK IN'});save();e.target.reset();closeModal('stockInModal');alert('Stock In successfully recorded.')};
+document.getElementById('outForm').onsubmit=e=>{e.preventDefault();if(!(isAdmin()||isDataEntry())){alert('Data Entry or Administrator access required.');return;}let f=new FormData(e.target),i=db.items.find(x=>x.id===f.get('item')),qty=+f.get('qty');if(!i)return;if(qty>i.stock){alert('Insufficient stock available. Current stock: '+i.stock);return}i.stock-=qty;let x={id:'TX'+Date.now()+Math.random().toString(36).slice(2,8),date:f.get('date'),ref:f.get('ref'),itemId:i.id,itemName:i.name,qty,person:f.get('person'),equipment:f.get('equipment'),purpose:f.get('purpose')};db.stockOut.push(x);db.transactions.push({...x,type:'STOCK OUT'});save();e.target.reset();closeModal('stockOutModal');alert('Stock Out successfully recorded.')};
+document.getElementById('adjForm').onsubmit=e=>{e.preventDefault();if(!isAdmin()){alert('Administrator access required.');return;}let f=new FormData(e.target),i=db.items.find(x=>x.id===f.get('item')),qty=+f.get('qty');if(!i)return;let prev=i.stock,newStock=prev+qty;if(newStock<0){alert('Adjustment cannot make stock negative.');return}i.stock=newStock;db.adjustments.push({date:f.get('date'),itemId:i.id,itemName:i.name,prev,qty,newStock,reason:f.get('reason')});db.transactions.push({date:f.get('date'),type:'ADJUSTMENT',itemName:i.name,itemId:i.id,qty,ref:'ADJ'});save();e.target.reset();closeModal('adjustModal');alert('Adjustment applied.')};
+function deleteItem(id){if(!adminOnly())return;const x=db.items.find(i=>i.id===id);if(!x)return;if(confirm('Delete item '+x.name+'? Stock and transaction history will remain, but this master item will be removed.')){db.items=db.items.filter(i=>i.id!==id);save();showToast('Item deleted.')}}
+function adminOnly(){if(!isAdmin()){alert('Administrator access required.');return false}return true}
+function editItem(id){if(!adminOnly())return;const x=db.items.find(v=>v.id===id);if(!x)return;const code=prompt('Item Code:',x.code);if(code===null)return;const part=prompt('Part Number:',x.part);if(part===null)return;const name=prompt('Item Name:',x.name);if(name===null)return;const cat=prompt('Category:',x.cat);if(cat===null)return;const brand=prompt('Brand:',x.brand||'');if(brand===null)return;const unit=prompt('Unit:',x.unit||'PCS');if(unit===null)return;const min=prompt('Minimum Stock:',x.min);if(min===null)return;const cost=prompt('Unit Cost:',x.cost);if(cost===null)return;const loc=prompt('Location:',x.loc||'');if(loc===null)return;const supplier=prompt('Supplier:',x.supplier||'');if(supplier===null)return;const compat=prompt('Equipment Compatibility:',x.compat||'');if(compat===null)return;Object.assign(x,{code:code.trim(),part:part.trim(),name:name.trim(),cat:cat.trim(),brand:brand.trim(),unit:unit.trim(),min:Number(min)||0,cost:Number(cost)||0,loc:loc.trim(),supplier:supplier.trim(),compat:compat.trim()});save();showToast('Item updated successfully.')}
+function editCategory(c){if(!adminOnly())return;const i=db.categories.indexOf(c);if(i<0)return;const n=prompt('Category name:',c);if(n===null)return;n=n.trim();if(!n||n===c)return;if(db.categories.includes(n)){alert('Category already exists.');return}db.items.forEach(x=>{if(x.cat===c)x.cat=n});db.categories[i]=n;save();showToast('Category updated successfully.')}
+function editSupplier(id){if(!adminOnly())return;const x=db.suppliers.find(v=>v.id===id);if(!x)return;const name=prompt('Supplier name:',x.name);if(name===null)return;const contact=prompt('Contact person:',x.contact||'');if(contact===null)return;const phone=prompt('Phone:',x.phone||'');if(phone===null)return;const cat=prompt('Product category:',x.cat||'');if(cat===null)return;Object.assign(x,{name:name.trim(),contact:contact.trim(),phone:phone.trim(),cat:cat.trim()});save();showToast('Supplier updated successfully.')}
+function deleteSupplier(id){if(!adminOnly())return;const x=db.suppliers.find(v=>v.id===id);if(!x)return;if(confirm('Delete supplier '+x.name+'?')){db.suppliers=db.suppliers.filter(v=>v.id!==id);save();showToast('Supplier deleted.')}}
+function editEquipment(id){if(!adminOnly())return;const x=db.equipment.find(v=>v.id===id);if(!x)return;const newId=prompt('Machine / Equipment ID:',x.id);if(newId===null)return;const cleanId=newId.trim().toUpperCase();if(!/^EQ\\d{3,}$/.test(cleanId)){alert('Invalid ID. Use format like EQ001, EQ002, EQ003.');return}if(cleanId!==x.id&&db.equipment.some(v=>v!==x&&String(v.id).toUpperCase()===cleanId)){alert('This Machine ID already exists.');return}const name=prompt('Equipment / Machine name:',x.name);if(name===null)return;const type=prompt('Equipment type:',x.type||'');if(type===null)return;const man=prompt('Manufacturer:',x.man||'');if(man===null)return;const model=prompt('Model:',x.model||'');if(model===null)return;const fleet=prompt('Fleet / Serial:',x.fleet||'');if(fleet===null)return;const loc=prompt('Location:',x.loc||'');if(loc===null)return;const statusVal=prompt('Status:',x.status||'ACTIVE');if(statusVal===null)return;Object.assign(x,{id:cleanId,name:name.trim(),type:type.trim(),man:man.trim(),model:model.trim(),fleet:fleet.trim(),loc:loc.trim(),status:statusVal.trim()});save();showToast('Equipment updated successfully.')}
+function deleteEquipment(id){if(!adminOnly())return;const x=db.equipment.find(v=>v.id===id);if(!x)return;const used=(db.stockOut||[]).some(t=>t.equipment===x.name);if(used&&!confirm('This equipment has Stock Out history. Delete it anyway? Historical transactions will remain.'))return;if(confirm('Delete equipment / machine '+x.name+'?')){db.equipment=db.equipment.filter(v=>v.id!==id);if(selectedEquipment===x.name){selectedEquipment='';document.getElementById('equipStockTitle').textContent='Select equipment';}save();showToast('Equipment deleted.')}}
+function editBattery(id){if(!adminOnly())return;const x=db.batteries.find(v=>v.id===id);if(!x)return;const type=prompt('Battery type:',x.type||'');if(type===null)return;const brand=prompt('Brand / Model:',x.brand||'');if(brand===null)return;const voltage=prompt('Voltage:',x.voltage);if(voltage===null)return;const ah=prompt('Capacity Ah:',x.ah);if(ah===null)return;const equipment=prompt('Equipment:',x.equipment||'');if(equipment===null)return;const install=prompt('Installation date (YYYY-MM-DD):',x.install||today());if(install===null)return;const statusVal=prompt('Status:',x.status||'GOOD');if(statusVal===null)return;Object.assign(x,{type:type.trim(),brand:brand.trim(),voltage:Number(voltage)||0,ah:Number(ah)||0,equipment:equipment.trim(),install:install.trim(),status:statusVal.trim()});save();showToast('Battery updated successfully.')}
+function deleteBattery(id){if(!adminOnly())return;const x=db.batteries.find(v=>v.id===id);if(!x)return;if(confirm('Delete battery '+x.brand+'?')){db.batteries=db.batteries.filter(v=>v.id!==id);save();showToast('Battery deleted.')}}
+function editLubricant(name){if(!adminOnly())return;const x=db.lubricants.find(v=>v.name===name);if(!x)return;const n=prompt('Lubricant name:',x.name);if(n===null)return;const type=prompt('Type:',x.type||'');if(type===null)return;const brand=prompt('Brand:',x.brand||'');if(brand===null)return;const grade=prompt('Grade:',x.grade||'');if(grade===null)return;const pack=prompt('Pack size:',x.pack||'');if(pack===null)return;const min=prompt('Minimum stock:',x.min);if(min===null)return;Object.assign(x,{name:n.trim(),type:type.trim(),brand:brand.trim(),grade:grade.trim(),pack:pack.trim(),min:Number(min)||0});save();showToast('Lubricant updated successfully.')}
+function deleteLubricant(name){if(!adminOnly())return;const x=db.lubricants.find(v=>v.name===name);if(!x)return;if(confirm('Delete lubricant '+x.name+'?')){db.lubricants=db.lubricants.filter(v=>v!==x);save();showToast('Lubricant deleted.')}}
+function editTool(id){if(!adminOnly())return;const x=db.tools.find(v=>v.id===id);if(!x)return;const name=prompt('Tool name:',x.name);if(name===null)return;const cat=prompt('Category:',x.cat||'');if(cat===null)return;const brand=prompt('Brand:',x.brand||'');if(brand===null)return;const qty=prompt('Quantity:',x.qty);if(qty===null)return;const condition=prompt('Condition:',x.condition||'GOOD');if(condition===null)return;const assigned=prompt('Assigned To:',x.assigned||'');if(assigned===null)return;const statusVal=prompt('Status:',x.status||'AVAILABLE');if(statusVal===null)return;Object.assign(x,{name:name.trim(),cat:cat.trim(),brand:brand.trim(),qty:Number(qty)||0,condition:condition.trim(),assigned:assigned.trim(),status:statusVal.trim()});save();showToast('Tool updated successfully.')}
+function deleteTool(id){if(!adminOnly())return;const x=db.tools.find(v=>v.id===id);if(!x)return;if(confirm('Delete tool '+x.name+'?')){db.tools=db.tools.filter(v=>v.id!==id);save();showToast('Tool deleted.')}}
+function addCategory(){if(!adminOnly())return;let x=prompt('Enter category name:');if(x&&x.trim()&&!db.categories.includes(x.trim())){db.categories.push(x.trim());save()}}
+function delCat(c){if(db.items.some(i=>i.cat===c)){alert('Cannot delete: items use this category.');return}if(confirm('Delete category?')){db.categories=db.categories.filter(x=>x!==c);save()}}
+function addSupplier(){if(!adminOnly())return;let n=prompt('Supplier name:');if(n){db.suppliers.push({id:'S'+Date.now(),name:n,contact:prompt('Contact person:')||'',phone:prompt('Phone:')||'',cat:prompt('Product category:')||''});save()}}
+function nextEquipmentId(){let nums=(db.equipment||[]).map(e=>{let m=String(e.id||'').match(/^EQ(\\d+)$/i);return m?Number(m[1]):0});let n=Math.max(0,...nums)+1;return 'EQ'+String(n).padStart(3,'0')}
+function normalizeEquipmentIds(){
+  if(!Array.isArray(db.equipment))db.equipment=[];
+  const used=new Set();
+  let next=1,changed=false;
+  for(const e of db.equipment){
+    let id=String(e.id||'').trim().toUpperCase();
+    let m=id.match(/^EQ(\d{3,})$/);
+    if(m && !used.has(id)){
+      e.id=id;
+      used.add(id);
+      next=Math.max(next,Number(m[1])+1);
+    }else{
+      while(used.has('EQ'+String(next).padStart(3,'0'))) next++;
+      e.id='EQ'+String(next).padStart(3,'0');
+      used.add(e.id);
+      next++;
+      changed=true;
+    }
+  }
+  if(changed)localStorage.setItem(KEY,JSON.stringify(db));
+  return changed;
+}
+function addEquipment(){if(!adminOnly())return;let id=nextEquipmentId();let n=prompt('Machine / Equipment ID:',id);if(n===null)return;n=n.trim().toUpperCase();if(!/^EQ\\d{3,}$/.test(n)){alert('Invalid ID. Use format like EQ001, EQ002, EQ003.');return}if(db.equipment.some(e=>String(e.id).toUpperCase()===n)){alert('This Machine ID already exists.');return}let name=prompt('Equipment name:');if(name){db.equipment.push({id:n,name:name.trim(),type:prompt('Equipment type:')||'',man:prompt('Manufacturer:')||'',model:prompt('Model:')||'',fleet:prompt('Fleet/Serial:')||'',loc:prompt('Location:')||'',status:'ACTIVE'});save()}}
+function addBattery(){if(!adminOnly())return;let n=prompt('Battery brand/model:');if(n){db.batteries.push({id:'BAT'+Date.now(),type:prompt('Type:')||'Lead Acid',brand:n,voltage:prompt('Voltage:')||12,ah:prompt('Capacity Ah:')||0,equipment:prompt('Equipment:')||'',install:prompt('Installation date (YYYY-MM-DD):')||today(),status:'GOOD'});save()}}
+function addLubricant(){if(!adminOnly())return;let n=prompt('Lubricant name:');if(n){db.lubricants.push({name:n,type:prompt('Type:')||'',brand:prompt('Brand:')||'',grade:prompt('Grade:')||'',pack:prompt('Pack size:')||'',stock:+prompt('Current stock:')||0,min:+prompt('Minimum stock:')||0});save()}}
+function addTool(){if(!adminOnly())return;let n=prompt('Tool name:');if(n){db.tools.push({id:'T'+Date.now(),name:n,cat:prompt('Category:')||'',brand:prompt('Brand:')||'',qty:+prompt('Quantity:')||1,condition:'GOOD',assigned:'',status:'AVAILABLE'});save()}}
+function globalSearch(){let q=document.getElementById('globalSearch').value.trim().toLowerCase();if(q){showPage('stock');document.getElementById('stockFilter').value=q;renderStock()}}
+function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='MEDLOG-MECHANICAL-WORKSHOP-backup-'+today()+'.json';a.click()}
+function restore(e){let file=e.target.files[0];if(!file)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.items||!x.categories)throw 0;db=x;save();alert('Backup restored successfully.')}catch{alert('Invalid backup file.')}};r.readAsText(file)}
+function clearData(){if(confirm('WARNING: This will permanently delete all inventory data. Are you sure?')){localStorage.removeItem(KEY);location.reload()}}
+function exportCSV(){let rows=[['Date','Type','Item','Qty','Reference','Person/Supplier','Equipment'],...db.transactions.map(x=>[x.date,x.type,x.itemName,x.qty,x.ref||'',x.person||x.supplier||'',x.equipment||''])];let csv=rows.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='inventory-transactions.csv';a.click()}
+function printCurrentStock(){showPage('stock');setTimeout(()=>window.print(),100)}
+window.onbeforeprint=()=>document.body.classList.add('printing');window.onafterprint=()=>document.body.classList.remove('printing');
+
+const AUTH_KEY='mw_admin_session';
+const USER_KEY='mw_logged_user';
+const ADMIN_USER='admin';
+const DATA_USER='dataentry';
+const VIEWER_USER='viewer';
+const VIEWER_PASS_KEY='mw_viewer_password';
+const ADMIN_PASS_KEY='mw_admin_password';
+const DATA_PASS_KEY='mw_dataentry_password';
+if(!localStorage.getItem(ADMIN_PASS_KEY))localStorage.setItem(ADMIN_PASS_KEY,'admin123');
+if(!localStorage.getItem(DATA_PASS_KEY))localStorage.setItem(DATA_PASS_KEY,'entry123');
+if(!localStorage.getItem(VIEWER_PASS_KEY))localStorage.setItem(VIEWER_PASS_KEY,'viewer123');
+
+function currentRole(){
+ return sessionStorage.getItem(USER_KEY)||null;
+}
+function isAdmin(){return currentRole()==='admin'}
+function isDataEntry(){return currentRole()==='dataentry'}
+
+function applyRoleUI(){
+ const role=currentRole();
+ if(!role)return;
+ const admin=role==='admin';
+ const dataEntry=role==='dataentry';
+ const viewer=role==='viewer';
+ document.querySelectorAll('.admin-only').forEach(el=>el.style.display=admin?'block':'none');
+ document.getElementById('headerUser').textContent=admin?'Administrator':viewer?'Viewer':'Data Entry';
+ document.getElementById('headerRole').textContent=admin?'Full Inventory Administration':viewer?'Read Only Access':'Data Entry Operator';
+ document.getElementById('roleBadge').textContent=admin?'ADMIN':viewer?'VIEWER':'DATA ENTRY';
+ document.getElementById('userAvatar').textContent=admin?'A':viewer?'V':'D';
+
+ const allowed={
+   admin:['dashboard','stock','equipstock','stockin','stockout','adjust','items','categories','suppliers','equipment','battery','lubricant','tools','low','summary','reports','admin','settings'],
+   dataentry:['dashboard','stock','equipstock','stockin','stockout'],
+   viewer:['dashboard','stock','equipstock','summary','reports']
+ }[role]||[];
+ document.querySelectorAll('.nav button[data-page]').forEach(btn=>{
+   btn.style.display=allowed.includes(btn.dataset.page)?'block':'none';
+ });
+ document.querySelectorAll('.admin-action').forEach(el=>el.style.display=admin?'inline-block':'none');
+ // Viewer is read-only; Data Entry may record Stock In/Out but not manage master data.
+ document.querySelectorAll('[onclick*="openModal(\'stockInModal\')"],[onclick*="openModal(\'stockOutModal\')"]').forEach(el=>el.style.display=viewer?'none':'');
+ document.querySelectorAll('[onclick*="showPage(\'items\')"],[onclick*="openModal(\'itemModal\')"]').forEach(el=>el.style.display=admin?'':'none');
+}
+
+
+async function doLogin(){
+ const raw=document.getElementById('loginUser').value.trim().toLowerCase();
+ const p=document.getElementById('loginPass').value;
+ const aliases={admin:'admin@medlog.local',dataentry:'dataentry@medlog.local',viewer:'viewer@medlog.local'};
+ const email=raw.includes('@')?raw:(aliases[raw]||raw);
+ const err=document.getElementById('loginError');
+ err.style.display='none';
+ if(!window.MEDLOG_SUPABASE){
+   err.textContent='Online database is not configured.';
+   err.style.display='block';
+   return;
+ }
+ try{
+   const {data,error}=await window.MEDLOG_SUPABASE.auth.signInWithPassword({email,password:p});
+   if(error)throw error;
+   const user=data.user;
+   let role=null;
+   const {data:profile,error:profileError}=await window.MEDLOG_SUPABASE
+      .from('profiles').select('role').eq('id',user.id).maybeSingle();
+   if(profileError)throw profileError;
+   role=profile&&profile.role;
+   if(!role){
+     const prefix=(user.email||'').split('@')[0].toLowerCase();
+     role=['admin','dataentry','viewer'].includes(prefix)?prefix:'viewer';
+   }
+   sessionStorage.setItem(AUTH_KEY,'1');
+   sessionStorage.setItem(USER_KEY,role);
+   sessionStorage.setItem('MEDLOG_AUTH_EMAIL',user.email||'');
+   document.getElementById('loginOverlay').style.display='none';
+   document.getElementById('loginError').style.display='none';
+   applyRoleUI();
+   await window.medlogLoadCloud();
+   showPage('dashboard');
+ }catch(e){
+   console.error(e);
+   err.textContent='Invalid Supabase email/username or password.';
+   err.style.display='block';
+ }
+}
+
+async function logout(){
+ try{
+   if(window.MEDLOG_SUPABASE) await window.MEDLOG_SUPABASE.auth.signOut();
+ }catch(e){console.warn(e)}
+ try{sessionStorage.clear();}catch(e){}
+ const overlay=document.getElementById('loginOverlay');
+ const user=document.getElementById('loginUser');
+ const pass=document.getElementById('loginPass');
+ if(user)user.value='admin';
+ if(pass)pass.value='';
+ document.getElementById('loginError').style.display='none';
+ if(overlay)overlay.style.display='flex';
+ applyRoleUI();
+ if(typeof showToast==='function')showToast('Logged out successfully.');
+}
+
+function guardPage(page){
+ if(isAdmin())return true;
+ const allowed=['dashboard','stock','equipstock','summary','reports'];
+ if(!allowed.includes(page)){alert('Access restricted. Please login as Administrator.');return false}
+ return true;
+}
+
+document.getElementById('passwordForm').addEventListener('submit',function(e){
+ e.preventDefault();
+ if(!isAdmin()){alert('Administrator access required.');return}
+ const current=document.getElementById('currentPassword').value;
+ const next=document.getElementById('newPassword').value;
+ const confirm=document.getElementById('confirmPassword').value;
+ const status=document.getElementById('passwordStatus'); status.className='password-status';
+ if(current!==localStorage.getItem(ADMIN_PASS_KEY)){status.textContent='❌ Current password is incorrect.';status.classList.add('err');return}
+ if(next.length<6){status.textContent='❌ New password must contain at least 6 characters.';status.classList.add('err');return}
+ if(next!==confirm){status.textContent='❌ New password and confirmation do not match.';status.classList.add('err');return}
+ localStorage.setItem(ADMIN_PASS_KEY,next);document.getElementById('passwordForm').reset();
+ status.textContent='✅ Administrator password changed successfully.';status.classList.add('ok');
+});
+
+document.getElementById('dataEntryPasswordForm').addEventListener('submit',function(e){
+ e.preventDefault();
+ if(!isAdmin()){alert('Administrator access required.');return}
+ const current=document.getElementById('deCurrent').value;
+ const next=document.getElementById('deNew').value;
+ const confirm=document.getElementById('deConfirm').value;
+ const status=document.getElementById('deStatus'); status.className='password-status';
+ if(current!==localStorage.getItem(DATA_PASS_KEY)){status.textContent='❌ Current Data Entry password is incorrect.';status.classList.add('err');return}
+ if(next.length<6){status.textContent='❌ New password must contain at least 6 characters.';status.classList.add('err');return}
+ if(next!==confirm){status.textContent='❌ Passwords do not match.';status.classList.add('err');return}
+ localStorage.setItem(DATA_PASS_KEY,next);document.getElementById('dataEntryPasswordForm').reset();
+ status.textContent='✅ Data Entry password updated successfully.';status.classList.add('ok');
+});
+
+function openDataEntryPassword(){document.getElementById('deCurrent').focus()}
+function openViewerPassword(){document.getElementById('vCurrent').focus()}
+document.getElementById('viewerPasswordForm').addEventListener('submit',function(e){
+ e.preventDefault(); if(!isAdmin()){alert('Administrator access required.');return}
+ const current=document.getElementById('vCurrent').value,next=document.getElementById('vNew').value,confirm=document.getElementById('vConfirm').value,status=document.getElementById('vStatus');status.className='password-status';
+ if(current!==localStorage.getItem(VIEWER_PASS_KEY)){status.textContent='❌ Current Viewer password is incorrect.';status.classList.add('err');return}
+ if(next.length<6){status.textContent='❌ New password must contain at least 6 characters.';status.classList.add('err');return}
+ if(next!==confirm){status.textContent='❌ Passwords do not match.';status.classList.add('err');return}
+ localStorage.setItem(VIEWER_PASS_KEY,next);document.getElementById('viewerPasswordForm').reset();status.textContent='✅ Viewer password updated successfully.';status.classList.add('ok');
+});
+
+/* ============================================================
+   MEDLOG ONLINE DATABASE BRIDGE
+   ============================================================ */
+(function(){
+  const SUPABASE_URL='https://qysempqapclvdqbblhmt.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY='sb_publishable_u0sjK3nkkNXm7Q7kQ3jZBQ_GKAPU3q3';
+
+  if(!window.supabase){
+    console.error('Supabase JS library failed to load.');
+    return;
+  }
+
+  const client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+  window.MEDLOG_SUPABASE=client;
+
+  const tableMap={
+    items:'items', suppliers:'suppliers', equipment:'equipment', batteries:'batteries',
+    lubricants:'lubricants', tools:'tools', stockIn:'stock_in', stockOut:'stock_out',
+    adjustments:'adjustments', transactions:'transactions'
+  };
+
+  function hasLocalData(){
+    return (db.items||[]).length || (db.equipment||[]).length ||
+      (db.suppliers||[]).length || (db.stockIn||[]).length ||
+      (db.stockOut||[]).length || (db.transactions||[]).length ||
+      (db.batteries||[]).length || (db.lubricants||[]).length || (db.tools||[]).length;
+  }
+
+  function toCloud(table,rows){
+    if(table==='stock_in') return rows.map(x=>({id:String(x.id),date:x.date,ref:x.ref||'',item_id:x.itemId||'',item_name:x.itemName||'',qty:Number(x.qty)||0,cost:Number(x.cost)||0,supplier:x.supplier||'',remarks:x.remarks||''}));
+    if(table==='stock_out') return rows.map(x=>({id:String(x.id),date:x.date,ref:x.ref||'',item_id:x.itemId||'',item_name:x.itemName||'',qty:Number(x.qty)||0,person:x.person||'',equipment:x.equipment||'',purpose:x.purpose||'',remarks:x.remarks||''}));
+    if(table==='adjustments') return rows.map(x=>({id:String(x.id),date:x.date,item_id:x.itemId||'',item_name:x.itemName||'',prev:Number(x.prev)||0,qty:Number(x.qty)||0,new_stock:Number(x.newStock)||0,reason:x.reason||''}));
+    if(table==='transactions') return rows.map(x=>({id:String(x.id),date:x.date,type:x.type,item_id:x.itemId||'',item_name:x.itemName||'',qty:Number(x.qty)||0,ref:x.ref||'',cost:Number(x.cost)||0,supplier:x.supplier||'',person:x.person||'',equipment:x.equipment||'',purpose:x.purpose||'',remarks:x.remarks||''}));
+    if(table==='items') return rows.map(x=>({id:String(x.id),code:String(x.code||''),part:String(x.part||''),name:String(x.name||''),cat:x.cat||'',brand:x.brand||'',unit:x.unit||'PCS',stock:Number(x.stock)||0,min:Number(x.min)||0,cost:Number(x.cost)||0,loc:x.loc||'',supplier:x.supplier||'',compat:x.compat||''}));
+    if(table==='suppliers') return rows.map(x=>({id:String(x.id),name:x.name||'',contact:x.contact||'',phone:x.phone||'',cat:x.cat||''}));
+    if(table==='equipment') return rows.map(x=>({id:String(x.id),name:x.name||'',type:x.type||'',man:x.man||'',model:x.model||'',fleet:x.fleet||'',loc:x.loc||'',status:x.status||'ACTIVE'}));
+    if(table==='batteries') return rows.map(x=>({id:String(x.id),type:x.type||'',brand:x.brand||'',voltage:Number(x.voltage)||0,ah:Number(x.ah)||0,equipment:x.equipment||'',install:x.install||null,status:x.status||'GOOD'}));
+    if(table==='lubricants') return rows.map(x=>({id:String(x.id||('LUB'+Date.now()+Math.random().toString(36).slice(2,8))),name:x.name||'',type:x.type||'',brand:x.brand||'',grade:x.grade||'',pack:x.pack||'',stock:Number(x.stock)||0,min:Number(x.min)||0}));
+    if(table==='tools') return rows.map(x=>({id:String(x.id),name:x.name||'',cat:x.cat||'',brand:x.brand||'',qty:Number(x.qty)||0,condition:x.condition||'GOOD',assigned:x.assigned||'',status:x.status||'AVAILABLE'}));
+    return rows;
+  }
+
+  function fromCloud(table,rows){
+    if(table==='stock_in') return rows.map(x=>({...x,itemId:x.item_id,itemName:x.item_name}));
+    if(table==='stock_out') return rows.map(x=>({...x,itemId:x.item_id,itemName:x.item_name}));
+    if(table==='adjustments') return rows.map(x=>({...x,itemId:x.item_id,itemName:x.item_name,newStock:x.new_stock}));
+    if(table==='transactions') return rows.map(x=>({...x,itemId:x.item_id,itemName:x.item_name}));
+    return rows;
+  }
+
+  async function getRows(table){
+    const {data,error}=await client.from(table).select('*');
+    if(error)throw error;
+    return data||[];
+  }
+
+  async function pushTable(table,rows){
+    const cloudRows=toCloud(table,rows);
+    if(!cloudRows.length)return;
+    const {error}=await client.from(table).upsert(cloudRows,{onConflict:'id'});
+    if(error)throw error;
+  }
+
+  async function pushCategories(){
+    const rows=(db.categories||[]).map(name=>({name}));
+    if(!rows.length)return;
+    const {error}=await client.from('categories').upsert(rows,{onConflict:'name'});
+    if(error)throw error;
+  }
+
+  async function pushCloud(){
+    if(!window.MEDLOG_CLOUD_READY)return;
+    try{
+      (db.lubricants||[]).forEach(x=>{if(!x.id)x.id='LUB'+Date.now()+Math.random().toString(36).slice(2,8)});
+      await pushCategories();
+      for(const k of Object.keys(tableMap)) await pushTable(tableMap[k],db[k]||[]);
+      localStorage.setItem(KEY,JSON.stringify(db));
+      if(typeof showToast==='function')showToast('Saved to online database.');
+    }catch(e){
+      console.error('MEDLOG cloud save failed:',e);
+      if(typeof showToast==='function')showToast('Online sync failed: '+(e.message||'check database/RLS'));
+    }
+  }
+
+  async function migrateLocalToCloud(){
+    await pushCategories();
+    for(const k of Object.keys(tableMap)) await pushTable(tableMap[k],db[k]||[]);
+  }
+
+  async function loadCloud(){
+    try{
+      const names=['items','categories','suppliers','equipment','batteries','lubricants','tools','stock_in','stock_out','adjustments','transactions'];
+      const result={};
+      for(const name of names)result[name]=await getRows(name);
+
+      const cloudHasData=names.some(n=>(result[n]||[]).length>0);
+      if(!cloudHasData && hasLocalData()){
+        await migrateLocalToCloud();
+        localStorage.setItem(KEY,JSON.stringify(db));
+      }else{
+        db={
+          items:result.items||[],
+          categories:(result.categories||[]).map(x=>x.name),
+          suppliers:result.suppliers||[],
+          equipment:result.equipment||[],
+          batteries:result.batteries||[],
+          lubricants:result.lubricants||[],
+          tools:result.tools||[],
+          stockIn:fromCloud('stock_in',result.stock_in||[]),
+          stockOut:fromCloud('stock_out',result.stock_out||[]),
+          adjustments:fromCloud('adjustments',result.adjustments||[]),
+          transactions:fromCloud('transactions',result.transactions||[])
+        };
+        const equipmentChanged=normalizeEquipmentIds();
+        localStorage.setItem(KEY,JSON.stringify(db));
+      }
+
+      window.MEDLOG_CLOUD_READY=true;
+      if(typeof equipmentChanged!=='undefined' && equipmentChanged && result.equipment && result.equipment.length){
+        try{
+          await client.from('equipment').delete().neq('id','__MEDLOG_KEEP_NONE__');
+          const normalized=toCloud('equipment',db.equipment||[]);
+          if(normalized.length){
+            const {error:equipErr}=await client.from('equipment').upsert(normalized,{onConflict:'id'});
+            if(equipErr)throw equipErr;
+          }
+        }catch(syncErr){
+          console.error('Equipment ID normalization sync failed:',syncErr);
+        }
+      }
+      renderAll();
+      if(typeof showToast==='function')showToast('Online database connected.');
+      return true;
+    }catch(e){
+      console.error('MEDLOG cloud load failed:',e);
+      window.MEDLOG_CLOUD_READY=false;
+      const err=document.getElementById('loginError');
+      if(err){err.textContent='Database connection failed: '+(e.message||'Unknown error');err.style.display='block';}
+      return false;
+    }
+  }
+
+  window.medlogLoadCloud=loadCloud;
+  window.MEDLOG_PUSH_CLOUD=pushCloud;
+  window.MEDLOG_DELETE_CLOUD_ROW=async function(table,id){
+    if(!window.MEDLOG_CLOUD_READY || !id)return;
+    const {error}=await client.from(table).delete().eq('id',String(id));
+    if(error)throw error;
+  };
+
+  window.save=async function(){
+    localStorage.setItem(KEY,JSON.stringify(db));
+    renderAll();
+    if(window.MEDLOG_CLOUD_READY)await pushCloud();
+  };
+
+  client.auth.getSession().then(async ({data})=>{
+    if(data&&data.session&&data.session.user){
+      const {data:profile}=await client.from('profiles').select('role').eq('id',data.session.user.id).maybeSingle();
+      const prefix=(data.session.user.email||'').split('@')[0].toLowerCase();
+      const role=profile&&profile.role || (['admin','dataentry','viewer'].includes(prefix)?prefix:'viewer');
+      sessionStorage.setItem(AUTH_KEY,'1');
+      sessionStorage.setItem(USER_KEY,role);
+      sessionStorage.setItem('MEDLOG_AUTH_EMAIL',data.session.user.email||'');
+      document.getElementById('loginOverlay').style.display='none';
+      applyRoleUI();
+      await loadCloud();
+    }
+  });
+})();
+
+document.getElementById('loginButton').addEventListener('click',doLogin);
+document.addEventListener('click',function(e){
+ const btn=e.target.closest('#logoutButton');
+ if(btn){e.preventDefault();logout();}
+});
+document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin()});
+
+document.getElementById('loginOverlay').style.display='flex';
+applyRoleUI();
+
+/* V7 local app enhancements */
+(function(){
+  const manifest={
+    name:"MEDLOG MECHANICAL WORKSHOP",
+    short_name:"MEDLOG WORKSHOP",
+    start_url:location.href,
+    display:"standalone",
+    background_color:"#f5f7fa",
+    theme_color:"#173f67",
+    description:"Mechanical Workshop Inventory Management System",
+    icons:[]
+  };
+  try{
+    const blob=new Blob([JSON.stringify(manifest)],{type:"application/manifest+json"});
+    const url=URL.createObjectURL(blob);
+    const link=document.getElementById('pwaManifest');
+    if(link)link.href=url;
+  }catch(e){}
+  window.showToast=function(msg){
+    const t=document.getElementById('toast');
+    if(!t)return;
+    t.textContent=msg;t.style.display='block';
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer=setTimeout(()=>t.style.display='none',2200);
+  };
+})();
+
+renderAll();
+</script>
+
+<!-- ============================================================
+     MEDLOG EQUIPMENT / MACHINE FORM FIX
+     ============================================================ -->
+<style>
+#equipmentFormModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:10000;align-items:center;justify-content:center;padding:20px}
+#equipmentFormModal .efm-box{width:min(720px,96vw);max-height:92vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.28)}
+#equipmentFormModal .efm-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #e5e9f0}
+#equipmentFormModal .efm-head h2{margin:0;color:#173f67;font-size:21px}
+#equipmentFormModal .efm-close{border:0;background:transparent;font-size:28px;cursor:pointer;color:#687386}
+#equipmentFormModal .efm-body{padding:20px 22px}
+#equipmentFormModal .efm-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+#equipmentFormModal .efm-field{display:flex;flex-direction:column;gap:6px}
+#equipmentFormModal .efm-field.full{grid-column:1/-1}
+#equipmentFormModal label{font-size:13px;font-weight:700;color:#475569}
+#equipmentFormModal input,#equipmentFormModal select{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:#fff}
+#equipmentFormModal input:focus,#equipmentFormModal select:focus{outline:2px solid rgba(23,63,103,.18);border-color:#173f67}
+#equipmentFormModal .efm-help{font-size:12px;color:#687386}
+#equipmentFormModal .efm-error{display:none;margin:0 0 14px;padding:10px 12px;border-radius:8px;background:#fff1f2;color:#b42318;font-size:13px}
+#equipmentFormModal .efm-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid #e5e9f0}
+@media(max-width:620px){#equipmentFormModal .efm-grid{grid-template-columns:1fr}}
+</style>
+
+<div id="equipmentFormModal">
+  <div class="efm-box" role="dialog" aria-modal="true" aria-labelledby="equipmentFormTitle">
+    <div class="efm-head">
+      <h2 id="equipmentFormTitle">Add Equipment / Machine</h2>
+      <button class="efm-close" type="button" onclick="closeEquipmentForm()">×</button>
+    </div>
+    <form id="equipmentForm">
+      <div class="efm-body">
+        <div id="equipmentFormError" class="efm-error"></div>
+        <div class="efm-grid">
+          <div class="efm-field">
+            <label for="efId">Machine ID *</label>
+            <input id="efId" maxlength="20" autocomplete="off" required>
+            <div class="efm-help">Use format EQ001, EQ002, EQ003...</div>
+          </div>
+          <div class="efm-field">
+            <label for="efName">Equipment / Machine Name *</label>
+            <input id="efName" maxlength="100" autocomplete="off" required>
+          </div>
+          <div class="efm-field">
+            <label for="efType">Type</label>
+            <input id="efType" maxlength="100">
+          </div>
+          <div class="efm-field">
+            <label for="efMan">Manufacturer</label>
+            <input id="efMan" maxlength="100">
+          </div>
+          <div class="efm-field">
+            <label for="efModel">Model</label>
+            <input id="efModel" maxlength="100">
+          </div>
+          <div class="efm-field">
+            <label for="efFleet">Fleet / Serial</label>
+            <input id="efFleet" maxlength="100">
+          </div>
+          <div class="efm-field">
+            <label for="efLoc">Location</label>
+            <input id="efLoc" maxlength="100">
+          </div>
+          <div class="efm-field">
+            <label for="efStatus">Status</label>
+            <select id="efStatus">
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="INACTIVE">INACTIVE</option>
+              <option value="MAINTENANCE">MAINTENANCE</option>
+              <option value="OUT OF SERVICE">OUT OF SERVICE</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="efm-foot">
+        <button type="button" class="btn" onclick="closeEquipmentForm()">Cancel</button>
+        <button type="submit" class="btn" id="equipmentFormSave">Save Equipment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  let editingEquipmentId=null;
+  function $e(id){return document.getElementById(id)}
+  function showEquipmentError(msg){
+    const el=$e('equipmentFormError');
+    if(el){el.textContent=msg||'Please check the entered information.';el.style.display='block';}
+  }
+  function clearEquipmentError(){
+    const el=$e('equipmentFormError');
+    if(el){el.textContent='';el.style.display='none';}
+  }
+  function nextEqIdSafe(){
+    const used=new Set((db.equipment||[]).map(x=>String(x.id||'').toUpperCase()));
+    let n=1;
+    while(used.has('EQ'+String(n).padStart(3,'0')))n++;
+    return 'EQ'+String(n).padStart(3,'0');
+  }
+  function openEquipmentForm(x){
+    editingEquipmentId=x?String(x.id):null;
+    clearEquipmentError();
+    $e('equipmentFormTitle').textContent=x?'Edit Equipment / Machine':'Add Equipment / Machine';
+    $e('equipmentFormSave').textContent=x?'Update Equipment':'Save Equipment';
+    $e('efId').value=x?x.id:nextEqIdSafe();
+    $e('efName').value=x?.name||'';
+    $e('efType').value=x?.type||'';
+    $e('efMan').value=x?.man||'';
+    $e('efModel').value=x?.model||'';
+    $e('efFleet').value=x?.fleet||'';
+    $e('efLoc').value=x?.loc||'';
+    $e('efStatus').value=x?.status||'ACTIVE';
+    $e('equipmentFormModal').style.display='flex';
+    setTimeout(()=>x?$e('efName').focus():$e('efId').select(),30);
+  }
+  window.closeEquipmentForm=function(){
+    $e('equipmentFormModal').style.display='none';
+    editingEquipmentId=null;
+  };
+  window.addEquipment=function(){
+    if(typeof adminOnly==='function' && !adminOnly())return;
+    openEquipmentForm(null);
+  };
+  window.editEquipment=function(id){
+    if(typeof adminOnly==='function' && !adminOnly())return;
+    const x=(db.equipment||[]).find(v=>String(v.id)===String(id));
+    if(!x){if(window.showToast)showToast('Equipment not found.');return;}
+    openEquipmentForm(x);
+  };
+  window.deleteEquipment=async function(id){
+    if(typeof adminOnly==='function' && !adminOnly())return;
+    const x=(db.equipment||[]).find(v=>String(v.id)===String(id));
+    if(!x)return;
+    const used=(db.stockOut||[]).some(t=>t.equipment===x.name);
+    if(used&&!confirm('This equipment has Stock Out history. Delete it anyway? Historical transactions will remain.'))return;
+    if(!confirm('Delete equipment / machine '+x.name+' ('+x.id+')?'))return;
+    db.equipment=db.equipment.filter(v=>String(v.id)!==String(id));
+    if(typeof selectedEquipment!=='undefined' && selectedEquipment===x.name){
+      selectedEquipment='';
+      const title=$e('equipStockTitle');if(title)title.textContent='Select equipment';
+    }
+    save();
+    try{
+      if(window.MEDLOG_DELETE_CLOUD_ROW)await window.MEDLOG_DELETE_CLOUD_ROW('equipment',x.id);
+      if(window.showToast)showToast('Equipment deleted from online database.');
+    }catch(err){
+      console.error(err);
+      if(window.showToast)showToast('Deleted locally, but online delete failed: '+(err.message||''));
+    }
+  };
+
+  $e('equipmentForm').addEventListener('submit',async function(ev){
+    ev.preventDefault();
+    clearEquipmentError();
+
+    const id=$e('efId').value.trim().toUpperCase();
+    const name=$e('efName').value.trim();
+    const type=$e('efType').value.trim();
+    const man=$e('efMan').value.trim();
+    const model=$e('efModel').value.trim();
+    const fleet=$e('efFleet').value.trim();
+    const loc=$e('efLoc').value.trim();
+    const status=$e('efStatus').value.trim()||'ACTIVE';
+
+    if(!/^EQ\d{3,}$/.test(id)){
+      showEquipmentError('Machine ID must be like EQ001, EQ002, EQ003.');
+      $e('efId').focus();return;
+    }
+    if(!name){
+      showEquipmentError('Equipment / Machine name is required.');
+      $e('efName').focus();return;
+    }
+    const duplicate=(db.equipment||[]).some(x=>String(x.id).toUpperCase()===id && String(x.id)!==String(editingEquipmentId));
+    if(duplicate){
+      showEquipmentError('This Machine ID already exists. Please use another ID.');
+      $e('efId').focus();return;
+    }
+
+    const oldId=editingEquipmentId;
+    const record={id,name,type,man,model,fleet,loc,status};
+
+    try{
+      if(oldId){
+        const x=(db.equipment||[]).find(v=>String(v.id)===String(oldId));
+        if(!x){showEquipmentError('The equipment record no longer exists.');return;}
+        Object.assign(x,record);
+      }else{
+        db.equipment=db.equipment||[];
+        db.equipment.push(record);
+      }
+
+      save();
+      if(oldId && oldId!==id && window.MEDLOG_DELETE_CLOUD_ROW){
+        await window.MEDLOG_DELETE_CLOUD_ROW('equipment',oldId);
+      }
+      closeEquipmentForm();
+      if(window.showToast)showToast(oldId?'Equipment updated successfully.':'Equipment added successfully.');
+    }catch(err){
+      console.error('Equipment save error:',err);
+      showEquipmentError('Save failed: '+(err.message||'Unknown database error'));
+    }
+  });
+
+  $e('equipmentFormModal').addEventListener('click',function(e){
+    if(e.target===this)window.closeEquipmentForm();
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape' && $e('equipmentFormModal').style.display==='flex')window.closeEquipmentForm();
+  });
+})();
+</script>
+
+<div class="app-footer">MEDLOG MECHANICAL WORKSHOP • Mechanical Workshop Inventory Management System • Online Database Edition</div></body>
+</html>
